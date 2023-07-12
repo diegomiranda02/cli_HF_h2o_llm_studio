@@ -217,21 +217,88 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
     )
     return card
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   
-8. 
+8. Code to publish the model using CLI
+
+```
+experiment_path = "/content/output/demo_fine_tuning/"
+cfg, model, tokenizer = load_cfg_model_tokenizer(
+                          experiment_path,
+                          merge=True,
+                          device="cpu",
+                        )
+
+check_disk_space(model.backbone, "./")
+
+huggingface_hub.login("Huggin Face API_KEY")
+
+user_id = huggingface_hub.whoami()["name"]
+
+repo_id = "[The repository name in the Hugging Face platform]"
+
+# push tokenizer to hub
+tokenizer.push_to_hub(repo_id=repo_id, private=True)
+
+
+# push model card to hub
+card = get_model_card(cfg, model, repo_id)
+card.push_to_hub(
+        repo_id=repo_id, repo_type="model", commit_message="Upload model card"
+)
+
+# push config to hub
+api = huggingface_hub.HfApi()
+api.upload_file(
+      path_or_fileobj=f"{experiment_path}/cfg.yaml",
+      path_in_repo="cfg.yaml",
+      repo_id=repo_id,
+      repo_type="model",
+      commit_message="Upload cfg.yaml",
+)
+
+# push model to hub
+model.backbone.config.custom_pipelines = {
+      "text-generation": {
+          "impl": "h2oai_pipeline.H2OTextGenerationPipeline",
+          "pt": "AutoModelForCausalLM",
+      }
+}
+
+model.backbone.push_to_hub(
+    repo_id=repo_id,
+    private=True,
+    commit_message="Upload model",
+    safe_serialization=False,
+)
+
+# push pipeline to hub
+template_env = Environment(
+      loader=FileSystemLoader(searchpath="llm_studio/src/")
+)
+
+pipeline_template = template_env.get_template("h2oai_pipeline_template.py")
+
+data = {
+    "text_prompt_start": cfg.dataset.text_prompt_start,
+    "text_answer_separator": cfg.dataset.text_answer_separator,
+}
+
+if cfg.dataset.add_eos_token_to_prompt:
+    data.update({"end_of_sentence": cfg._tokenizer_eos_token})
+else:
+    data.update({"end_of_sentence": ""})
+
+custom_pipeline = pipeline_template.render(data)
+
+custom_pipeline_path = os.path.join(experiment_path, "h2oai_pipeline.py")
+with open(custom_pipeline_path, "w") as f:
+    f.write(custom_pipeline)
+
+api.upload_file(
+    path_or_fileobj=custom_pipeline_path,
+    path_in_repo="h2oai_pipeline.py",
+    repo_id=repo_id,
+    repo_type="model",
+    commit_message="Upload h2oai_pipeline.py",
+)
+```
