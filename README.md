@@ -163,15 +163,11 @@ echo "all done"
 
 # The following code snippets were adapted using existing codes in the h2o LLM Studio project
 
-6. Install the libs required
-
+6. Create the model_publisher.py file. I have created this file to follow the patterns of the H2O LLM Studio code, but it is possible to create a class or use only the method publish_model_to_hugging_face directly from Google Colab or other environment.
+   
 ```
-pip install accelerate h2o_wave transformers GPUtil boto3 datasets sqlitedict openai sacrebleu peft coolname bitsandbytes
-```
+%%writefile model_publisher.py
 
-7. Imports
-
-```
 from app_utils.sections.chat import load_cfg_model_tokenizer
 from llm_studio.src.utils.modeling_utils import check_disk_space
 from jinja2 import Environment, FileSystemLoader
@@ -180,11 +176,15 @@ import accelerate
 import transformers
 import torch
 import os
-```
+import argparse
+import logging
+import sys
 
-8. get_model_card used to define the Hugging Face Model Card
-
-```
+#######################################################
+# Method to define the Model Card
+# It is possible to change the language, the library name and the tags.
+# These values will appear in the Model Card tab of Hugging Face.
+#######################################################
 def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
     card_data = huggingface_hub.ModelCardData(
         language="en",
@@ -216,89 +216,134 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
         else "",
     )
     return card
-```
-  
-8. Code to publish the model using CLI
 
-```
-experiment_path = "[PATH OF THE EXPERIMENT]"
-cfg, model, tokenizer = load_cfg_model_tokenizer(
-                          experiment_path,
-                          merge=True,
-                          device="cpu",
-                        )
+# Method to publish the model to Hugging Face
+# experiment_path -> The path where the files of the fine-tuned model are located
+# device -> 'cpu' or 'cuda:0', if the GPU device id is 0
+# api_key -> The Hugging Face API Key
+# repo_id -> The Hugging Face Repository ID
+def publish_model_to_hugging_face(experiment_path: str, device: str, api_key: str, repo_id: str) -> None:
 
-check_disk_space(model.backbone, "./")
+  cfg, model, tokenizer = load_cfg_model_tokenizer(
+                            experiment_path,
+                            merge=True,
+                            device=device,
+                          )
 
-huggingface_hub.login("[Hugging Face API_KEY]")
+  check_disk_space(model.backbone, "./")
 
-user_id = huggingface_hub.whoami()["name"]
+  huggingface_hub.login(api_key)
 
-repo_id = "[The repository name in the Hugging Face platform]"
+  user_id = huggingface_hub.whoami()["name"]
 
-# push tokenizer to hub
-tokenizer.push_to_hub(repo_id=repo_id, private=True)
+  # push tokenizer to hub
+  tokenizer.push_to_hub(repo_id=repo_id, private=True)
 
 
-# push model card to hub
-card = get_model_card(cfg, model, repo_id)
-card.push_to_hub(
-        repo_id=repo_id, repo_type="model", commit_message="Upload model card"
-)
+  # push model card to hub
+  card = get_model_card(cfg, model, repo_id)
+  card.push_to_hub(
+          repo_id=repo_id, repo_type="model", commit_message="Upload model card"
+  )
 
-# push config to hub
-api = huggingface_hub.HfApi()
-api.upload_file(
-      path_or_fileobj=f"{experiment_path}/cfg.yaml",
-      path_in_repo="cfg.yaml",
+  # push config to hub
+  api = huggingface_hub.HfApi()
+  api.upload_file(
+        path_or_fileobj=f"{experiment_path}/cfg.yaml",
+        path_in_repo="cfg.yaml",
+        repo_id=repo_id,
+        repo_type="model",
+        commit_message="Upload cfg.yaml",
+  )
+
+  # push model to hub
+  model.backbone.config.custom_pipelines = {
+        "text-generation": {
+            "impl": "h2oai_pipeline.H2OTextGenerationPipeline",
+            "pt": "AutoModelForCausalLM",
+        }
+  }
+
+  model.backbone.push_to_hub(
+      repo_id=repo_id,
+      private=True,
+      commit_message="Upload model",
+      safe_serialization=False,
+  )
+
+  # push pipeline to hub
+  template_env = Environment(
+        loader=FileSystemLoader(searchpath="llm_studio/src/")
+  )
+
+  pipeline_template = template_env.get_template("h2oai_pipeline_template.py")
+
+  data = {
+      "text_prompt_start": cfg.dataset.text_prompt_start,
+      "text_answer_separator": cfg.dataset.text_answer_separator,
+  }
+
+  if cfg.dataset.add_eos_token_to_prompt:
+      data.update({"end_of_sentence": cfg._tokenizer_eos_token})
+  else:
+      data.update({"end_of_sentence": ""})
+
+  custom_pipeline = pipeline_template.render(data)
+
+  custom_pipeline_path = os.path.join(experiment_path, "h2oai_pipeline.py")
+
+  with open(custom_pipeline_path, "w") as f:
+      f.write(custom_pipeline)
+
+  api.upload_file(
+      path_or_fileobj=custom_pipeline_path,
+      path_in_repo="h2oai_pipeline.py",
       repo_id=repo_id,
       repo_type="model",
-      commit_message="Upload cfg.yaml",
-)
+      commit_message="Upload h2oai_pipeline.py",
+  )
 
-# push model to hub
-model.backbone.config.custom_pipelines = {
-      "text-generation": {
-          "impl": "h2oai_pipeline.H2OTextGenerationPipeline",
-          "pt": "AutoModelForCausalLM",
-      }
-}
 
-model.backbone.push_to_hub(
-    repo_id=repo_id,
-    private=True,
-    commit_message="Upload model",
-    safe_serialization=False,
-)
+if __name__ == "__main__":
+  parser = argparse.ArgumentParser(description="")
+  parser.add_argument("-e", "--experiment_dir", required=True, help="experiment dir", default=argparse.SUPPRESS)
+  parser.add_argument("-d", "--device", help="'cpu' or 'cuda:0', if the GPU device id is 0", default=argparse.SUPPRESS)
+  parser.add_argument("-a", "--api_key", help="Hugging Face API Key", default=argparse.SUPPRESS)
+  parser.add_argument("-r", "--repository_id", help="Hugging Face Repository ID", default=argparse.SUPPRESS)
 
-# push pipeline to hub
-template_env = Environment(
-      loader=FileSystemLoader(searchpath="llm_studio/src/")
-)
+  parser_args, unknown = parser.parse_known_args(sys.argv)
 
-pipeline_template = template_env.get_template("h2oai_pipeline_template.py")
+  #args = vars(parser.parse_args())
 
-data = {
-    "text_prompt_start": cfg.dataset.text_prompt_start,
-    "text_answer_separator": cfg.dataset.text_answer_separator,
-}
+  if "experiment_dir" in parser_args:
+        experiment_dir = parser_args.experiment_dir
+  else:
+    raise ValueError("Please, provide the experiment directory")
 
-if cfg.dataset.add_eos_token_to_prompt:
-    data.update({"end_of_sentence": cfg._tokenizer_eos_token})
-else:
-    data.update({"end_of_sentence": ""})
+  if "device" in parser_args:
+        device = parser_args.device
+  else:
+    raise ValueError("Please, provide the device")
 
-custom_pipeline = pipeline_template.render(data)
+  if "api_key" in parser_args:
+        api_key = parser_args.api_key
+  else:
+    raise ValueError("Please, provide the Hugging Face API key")
 
-custom_pipeline_path = os.path.join(experiment_path, "h2oai_pipeline.py")
-with open(custom_pipeline_path, "w") as f:
-    f.write(custom_pipeline)
+  if "repository_id" in parser_args:
+        repository_id = parser_args.repository_id
+  else:
+    raise ValueError("Please, provide the Hugging Face Repository ID")
 
-api.upload_file(
-    path_or_fileobj=custom_pipeline_path,
-    path_in_repo="h2oai_pipeline.py",
-    repo_id=repo_id,
-    repo_type="model",
-    commit_message="Upload h2oai_pipeline.py",
-)
+  try:
+    publish_model_to_hugging_face(experiment_path = experiment_dir, device = device, api_key = api_key, repo_id = repository_id)
+  except Exception:
+    logging.error("Exception occurred during the run:", exc_info=True)
 ```
+
+7. Run the following command passing the parameters
+
+```
+!pipenv run python model_publisher.py -e "[EXPERIMENT DIR]" -d "[DEVICE]" -a "[HUGGING FACE API KEY]" -r "[HUGGING FACE Repository ID]"
+```
+
