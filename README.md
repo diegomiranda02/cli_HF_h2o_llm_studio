@@ -156,7 +156,7 @@ echo "all done"
 !sh run.sh
 ```
 
-# The following code snippets were adapted using existing codes in the h2o LLM Studio project
+# The following code snippets were adapted using existing codes in the H2O LLM Studio project
 
 6. Create the model_publisher.py file. I have created this file to follow the patterns of the H2O LLM Studio code, but it is possible to create a class or use only the method publish_model_to_hugging_face directly from Google Colab or other environment.
    
