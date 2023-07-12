@@ -1,8 +1,8 @@
-# Adaptation in the H2O code for publishing models from h2o LLM Studio to Hugging Face using the CLI interface
+# Adaptation in the H2O code for publishing models from H2O LLM Studio to Hugging Face using the CLI interface
 
 # CREDITS
  
-### 1. H2O company for releasing the h2o LLM Studio software to enable free-of-charge fine-tuning of LLM algorithms
+### 1. H2O company for releasing the H2O LLM Studio software to enable free-of-charge fine-tuning of LLM algorithms
 
 H2O LLM Studio Project: https://h2o.ai/blog/effortless-fine-tuning-of-large-language-models-with-open-source-h2o-llm-studio/
 
@@ -12,7 +12,7 @@ Tutorial on how to use the software using the CLI interface: https://colab.resea
 
 Fine-tuning an LLM model with H2O LLM Studio to generate Cypher statements: https://towardsdatascience.com/fine-tuning-an-llm-model-with-h2o-llm-studio-to-generate-cypher-statements-3f34822ad5
 
-# Perform the steps in the H2o tutorial
+# Perform the steps in the H2O tutorial
 
 1. Clone the h2o LLM Studio repository
 
