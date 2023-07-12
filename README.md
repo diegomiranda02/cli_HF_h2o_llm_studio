@@ -175,11 +175,12 @@ import argparse
 import logging
 import sys
 
-#######################################################
+######################################################################
 # Method to define the Model Card
 # It is possible to change the language, the library name and the tags.
 # These values will appear in the Model Card tab of Hugging Face.
-#######################################################
+#######################################################################
+
 def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
     card_data = huggingface_hub.ModelCardData(
         language="en",
@@ -212,11 +213,14 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
     )
     return card
 
+####################################################################################
 # Method to publish the model to Hugging Face
 # experiment_path -> The path where the files of the fine-tuned model are located
 # device -> 'cpu' or 'cuda:0', if the GPU device id is 0
 # api_key -> The Hugging Face API Key
 # repo_id -> The Hugging Face Repository ID
+#####################################################################################
+
 def publish_model_to_hugging_face(experiment_path: str, device: str, api_key: str, repo_id: str) -> None:
 
   cfg, model, tokenizer = load_cfg_model_tokenizer(
