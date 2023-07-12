@@ -182,7 +182,7 @@ import torch
 import os
 ```
 
-8. get_model_card used in the publish_to_hugging_face_cli method
+8. get_model_card used to define the Hugging Face Model Card
 
 ```
 def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
