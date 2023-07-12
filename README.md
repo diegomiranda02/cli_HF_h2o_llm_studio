@@ -343,6 +343,6 @@ if __name__ == "__main__":
 7. Run the following command passing the parameters
 
 ```
-!pipenv run python model_publisher.py -e "[EXPERIMENT DIR]" -d "[DEVICE]" -a "[HUGGING FACE API KEY]" -r "[HUGGING FACE Repository ID]"
+!pipenv run python model_publisher.py -e "[EXPERIMENT DIR]" -d "[DEVICE]" -a "[HUGGING FACE API KEY]" -r "[HUGGING FACE REPOSITORY ID]"
 ```
 
