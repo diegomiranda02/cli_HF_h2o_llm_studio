@@ -2,13 +2,13 @@
 
 # CREDITS
  
-### H2O company for releasing the h2o LLM Studio software to enable free-of-charge fine-tuning of LLM algorithms
+### 1. H2O company for releasing the h2o LLM Studio software to enable free-of-charge fine-tuning of LLM algorithms
 
 H2O LLM Studio Project: https://h2o.ai/blog/effortless-fine-tuning-of-large-language-models-with-open-source-h2o-llm-studio/
 
 Tutorial on how to use the software using the CLI interface: https://colab.research.google.com/drive/1-OYccyTvmfa3r7cAquw8sioFFPJcn4R9?usp=sharing
 
-### Tomaz Bratanic for sharing a step-by-step guide on how to use the H2O LLM Studio software to do fine-tuning to generate Cypher code
+### 2. Tomaz Bratanic for sharing a step-by-step guide on how to use the H2O LLM Studio software to do fine-tuning to generate Cypher code
 
 Fine-tuning an LLM model with H2O LLM Studio to generate Cypher statements: https://towardsdatascience.com/fine-tuning-an-llm-model-with-h2o-llm-studio-to-generate-cypher-statements-3f34822ad5
 
