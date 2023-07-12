@@ -37,6 +37,12 @@ rm -r h2o-llmstudio
 ```
 3. Create the configuration class
 
+ - If you are using Google Colab use the /content/ dir or the dir you chose to clone the repository to set the ROOT_DIR variable
+ - The 'output_directory' is where the model and the files generated from the fine-tuning will be. Every execution of the training is called an experiment, set the variable 'experiment_name' to define a name of the experiment. 'llm_backbone' is the variable to inform which LLM will be fine-tuned.
+ - Set the 'train_dataframe' variable to inform which dataset will be used.
+ - Dataset suggestion to use: https://github.com/tomasonjo/blog-datasets/tree/main/llm
+ - It's possible to change some configuration parameters. In this case, the epochs parameter was changed from 1 to 15 (epochs=15).
+
 ```
 %%writefile cfg_notebook.py
 
@@ -46,22 +52,9 @@ from dataclasses import dataclass
 from llm_studio.python_configs.text_causal_language_modeling_config import ConfigProblemBase, ConfigNLPCausalLMDataset, \
     ConfigNLPCausalLMTokenizer, ConfigNLPAugmentation, ConfigNLPCausalLMArchitecture, ConfigNLPCausalLMTraining, \
     ConfigNLPCausalLMPrediction, ConfigNLPCausalLMEnvironment, ConfigNLPCausalLMLogging
-```
-If you are using Google Colab use the /content/ dir or the dir you chose to clone the repository
 
-```
 ROOT_DIR="/content/"
-```
 
-The 'output_directory' is where the model and the files generated from the fine-tuning will be. Every execution of the training is called an experiment, set the variable 'experiment_name' to define a name of the experiment. 'llm_backbone' is the variable to inform which LLM will be fine-tuned.
-
-Set the 'train_dataframe' variable to inform which dataset will be used. 
-
-Dataset suggestion to use: https://github.com/tomasonjo/blog-datasets/tree/main/llm
-
-It's possible to change some configuration parameters. In this case, the epochs parameter was changed from 1 to 15 (epochs=15).
-
-```
 @dataclass
 class Config(ConfigProblemBase):
     output_directory: str = "output/demo_fine_tuning/" 
