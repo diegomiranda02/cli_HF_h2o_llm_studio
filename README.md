@@ -221,7 +221,7 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
 8. Code to publish the model using CLI
 
 ```
-experiment_path = "/content/output/demo_fine_tuning/"
+experiment_path = "[PATH OF THE EXPERIMENT]"
 cfg, model, tokenizer = load_cfg_model_tokenizer(
                           experiment_path,
                           merge=True,
@@ -230,7 +230,7 @@ cfg, model, tokenizer = load_cfg_model_tokenizer(
 
 check_disk_space(model.backbone, "./")
 
-huggingface_hub.login("Huggin Face API_KEY")
+huggingface_hub.login("[Hugging Face API_KEY]")
 
 user_id = huggingface_hub.whoami()["name"]
 
