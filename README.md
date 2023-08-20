@@ -1,3 +1,11 @@
+#############################################################################################################
+# UPDATE
+I suggested publishing the models from CLI to Hugging Face in the H2O LLM Studio, and now the [PR300](https://github.com/h2oai/h2o-llmstudio/pull/300) is included
+in the main project. Therefore, you can use the git clone https://github.com/h2oai/h2o-llmstudio.git repository 
+to train, test and publish the model from CLI.
+#############################################################################################################
+
+
 # Adaptation in the H2O code for publishing models from H2O LLM Studio to Hugging Face using the CLI interface
 
 # CREDITS
